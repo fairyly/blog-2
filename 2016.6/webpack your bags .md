@@ -3,6 +3,8 @@
 
 2016年5月28日  Du Liang 翻译。
 
+**如果您觉得我的翻译能给你带来点帮助，那就给我点个Star鼓励一下吧^_^,**
+
 
 ![](https://webpack.github.io/assets/what-is-webpack.png)
 # Webpack your bags #
