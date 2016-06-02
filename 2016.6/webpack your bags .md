@@ -424,6 +424,8 @@ webpack的output现在应该会相应地不同了，我们来用`--display-chunk
 	   [11] ./src/Components/Header.scss 1.05 kB {2} [built]
 	   [12] ./~/css-loader!./~/sass-loader!./src/Components/Header.scss 192 bytes {2} [built]
 
+能看见这里有一个主要问题：我们的两个组件都会用到jQuery 和 Mustache，也就是说这两个依赖会在chunk里有重复，wepack默认做很少优化，但是他会以plugin的形式来给webpack提供强大的功能。
 
+plugin跟laoder不同，它不是对指定的文件像pipe一样执行一些操作，他们对所有文件进行处理，做一些更高级的操作，但不一定非得是transformation（转换）
 
 to be done ................
