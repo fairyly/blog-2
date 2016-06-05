@@ -602,6 +602,16 @@ To production and beyond（超越）
 
 欧了，做完了几个小优化，下面比较一下结果：
 
+	$ webpack
+	                bundle.js   314 kB       0  [emitted]  main
+	1-21660ec268fe9de7776c.js  4.46 kB       1  [emitted]
+	2-fcc95abf34773e79afda.js  4.15 kB       2  [emitted]
+
+ 
+.
+	
+	$ NODE_ENV=production webpack
+	main-937cc23ccbf192c9edd6.js  97.2 kB       0  [emitted]  main
 
 
 to be done ................（update 2016.6.5 ）
