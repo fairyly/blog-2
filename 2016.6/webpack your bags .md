@@ -1,7 +1,8 @@
 **Webpack your bags** 
 原文： [**Webpack your bags**](https://blog.madewithlove.be/post/webpack-your-bags/ "Webpack your bags")(by [Maxime Fabre](https://twitter.com/anahkiasen))
 
-2016年5月28日  Du Liang 翻译。
+[我的github会持续更新](https://github.com/starduliang/blog/tree/master/2016.6)
+2016年5月28日  杜梁 翻译。
 
 **如果您觉得我的翻译能给你带来点帮助，那就给我点个Star鼓励一下吧^_^,**
 
@@ -426,6 +427,181 @@ webpack的output现在应该会相应地不同了，我们来用`--display-chunk
 
 能看见这里有一个主要问题：我们的两个组件都会用到jQuery 和 Mustache，也就是说这两个依赖会在chunk里有重复，wepack默认做很少优化，但是他会以plugin的形式来给webpack提供强大的功能。
 
-plugin跟laoder不同，它不是对指定的文件像pipe一样执行一些操作，他们对所有文件进行处理，做一些更高级的操作，但不一定非得是transformation（转换）
+plugin跟laoder不同，它不是对指定的文件像pipe一样执行一些操作，他们对所有文件进行处理，做一些更高级的操作，但不一定非得是transformation（转换），webpack有一把plugin可以做各种优化，此时我们比较感兴趣的一个是CommonChunksPlugin：它分析你的chunk的递归依赖，然后把它们抽出来放在别的地方，可以使一个完全独立的文件（如`vendor.js`）或者也可以是你的主（main）文件。
 
-to be done ................
+我们现在的case，我们需要把公用的依赖移到我们的entry（入口） 文件，如果所有的文件需要jQuery 和 Mustache,我们也可以把它往上层移动，我们来更新一下我们的configuration：
+
+
+	var webpack = require('webpack');
+	
+	module.exports = {
+	    entry:   './src',
+	    output:  {
+	      // ...
+	    },
+	    plugins: [
+	        new webpack.optimize.CommonsChunkPlugin({
+	            name:      'main', // Move dependencies to our main file
+	            children:  true, // Look for common dependencies in all children,
+	            minChunks: 2, // How many times a dependency must come up before being extracted
+	        }),
+	    ],
+	    module:  {
+	      // ...
+	    }
+	};
+
+
+如果我们重新run一下 Webpack，我们可以看到现在比之前好多了，这里的`main`是默认chunk的名字
+
+
+	chunk    {0} bundle.js (main) 287 kB [rendered]
+	    [0] ./src/index.js 550 bytes {0} [built]
+	    [2] ./~/jquery/dist/jquery.js 259 kB {0} [built]
+	    [4] ./~/mustache/mustache.js 19.4 kB {0} [built]
+	    [7] ./~/css-loader/lib/css-base.js 1.51 kB {0} [built]
+	    [8] ./~/style-loader/addStyles.js 7.21 kB {0} [built]
+	chunk    {1} 1.bundle.js 3.28 kB {0} [rendered]
+	    [1] ./src/Components/Button.js 1.94 kB {1} [built]
+	    [3] ./src/Components/Button.html 72 bytes {1} [built]
+	    [5] ./src/Components/Button.scss 1.05 kB {1} [built]
+	    [6] ./~/css-loader!./~/sass-loader!./src/Components/Button.scss 212 bytes {1} [built]
+	chunk    {2} 2.bundle.js 2.92 kB {0} [rendered]
+	    [9] ./src/Components/Header.js 1.62 kB {2} [built]
+	   [10] ./src/Components/Header.html 64 bytes {2} [built]
+	   [11] ./src/Components/Header.scss 1.05 kB {2} [built]
+	   [12] ./~/css-loader!./~/sass-loader!./src/Components/Header.scss 192 bytes {2} [built]
+
+如果我们把名字制定为如`name: 'vendor':`
+
+
+	new webpack.optimize.CommonsChunkPlugin({
+	    name:      'vendor',
+	    children:  true,
+	    minChunks: 2,
+	}),
+
+由于vendor 这个 chunk还不存在，webpack会创建一个`builds/vendor.js`,我们手动把它导入到我们的HTML：
+
+	<script src="builds/vendor.js"></script>
+	<script src="builds/bundle.js"></script>
+
+你也可以通过不提供一个公用的（common） chunk name或者是指定`async: true`来让公用的dependency被异步加载，webpack有非常多的只能优化。我不可能全列出来，但作为练习我们来给我们的app建一个product version
+
+To production and beyond（超越）
+
+好首先，我们加几个plugin到configuration，但我们想只有在NODE_ENV 等于production才加载这些plugin，所以让我们来给configuration加一些逻辑，因为只是一个js 文件，所以比较简单：
+
+	var webpack    = require('webpack');
+	var production = process.env.NODE_ENV === 'production';
+	
+	var plugins = [
+	    new webpack.optimize.CommonsChunkPlugin({
+	        name:      'main', // Move dependencies to our main file
+	        children:  true, // Look for common dependencies in all children,
+	        minChunks: 2, // How many times a dependency must come up before being extracted
+	    }),
+	];
+	
+	if (production) {
+	    plugins = plugins.concat([
+	       // Production plugins go here
+	    ]);
+	}
+	
+	module.exports = {
+	    entry:   './src',
+	    output:  {
+	        path:       'builds',
+	        filename:   'bundle.js',
+	        publicPath: 'builds/',
+	    },
+	    plugins: plugins,
+	    // ...
+	};
+
+再把几个webpack的设置在production上关掉：
+
+	module.exports = {
+	    debug:   !production,
+	    devtool: production ? false : 'eval',
+
+
+第一个设置把转为非debug模式，非debug模式会去掉debug模式中产生的方便调试的code，第2个是控制sourcemap 生成的，webpack有几个方法可以render sourcemap，自带的里面`eval`是最好的，生产环境我们不太关心sourcemap的事，我们把它disable掉，下面加一下production plugins：
+	
+	if (production) {
+	    plugins = plugins.concat([
+	
+	        // This plugin looks for similar chunks and files
+	        // and merges them for better caching by the user
+	        new webpack.optimize.DedupePlugin(),
+	
+	        // This plugins optimizes chunks and modules by
+	        // how much they are used in your app
+	        new webpack.optimize.OccurenceOrderPlugin(),
+	
+	        // This plugin prevents Webpack from creating chunks
+	        // that would be too small to be worth loading separately
+	        new webpack.optimize.MinChunkSizePlugin({
+	            minChunkSize: 51200, // ~50kb
+	        }),
+	
+	        // This plugin minifies all the Javascript code of the final bundle
+	        new webpack.optimize.UglifyJsPlugin({
+	            mangle:   true,
+	            compress: {
+	                warnings: false, // Suppress uglification warnings
+	            },
+	        }),
+	
+	        // This plugins defines various variables that we can set to false
+	        // in production to avoid code related to them from being compiled
+	        // in our final bundle
+	        new webpack.DefinePlugin({
+	            __SERVER__:      !production,
+	            __DEVELOPMENT__: !production,
+	            __DEVTOOLS__:    !production,
+	            'process.env':   {
+	                BABEL_ENV: JSON.stringify(process.env.NODE_ENV),
+	            },
+	        }),
+	
+	    ]);
+	}
+
+
+上面这几个是我最长用的，不过webpack提供很多plugin用来优化处理你的modules和chunks，NPM上也有个人用户写的plugin，有各种功能的插件，自行按需选择。
+
+另关于production assets的另一个方面是，我们有时想给asset加版本，还记得在上面我把`output.filename`设置为`bundle.js`吧，这有几个变量可以在option里用，其中一个是`[hash]`代表最后bundle文件的版本，同时用`output.chunkFilename`给chunk也加上版本：
+
+
+	output: {
+	    path:          'builds',
+	    filename:      production ? '[name]-[hash].js' : 'bundle.js',
+	    chunkFilename: '[name]-[chunkhash].js',
+	    publicPath:    'builds/',
+	},
+
+由于没有什么特别好的办法能动态地获取这个简化版app编译后的bundle的名字（由于加了版本号），所以只是在production上给asset加版本，多次编译后目录里带版本的bundle会越来越多，还得加一个第三方插件来每次production build 之前清理一下build folder（output 里面的path）：
+
+    $ npm install clean-webpack-plugin --save-dev
+
+把它加到configuration里
+
+	var webpack     = require('webpack');
+	var CleanPlugin = require('clean-webpack-plugin');
+	
+	// ...
+	
+	if (production) {
+	    plugins = plugins.concat([
+	
+	        // Cleanup the builds/ folder before
+	        // compiling our final assets
+	        new CleanPlugin('builds'),
+
+欧了，做完了几个小优化，下面比较一下结果：
+
+
+
+to be done ................（update 2016.6.5 ）
