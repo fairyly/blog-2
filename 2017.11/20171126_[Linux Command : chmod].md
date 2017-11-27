@@ -107,4 +107,5 @@ chmod 命令有两种方式改变文件或目录的权限。
 - [[命令技巧]chmod & Set-User-ID & Set-Group-ID](http://blog.csdn.net/pi9nc/article/details/14139465)
 - [chmod----改变一个或多个文件的存取模式(mode)](https://www.cnblogs.com/younes/archive/2009/11/20/1607174.html)
 - [Linux文件属性及如何修改文件属性](https://www.cnblogs.com/Linux--rookie/p/6662367.html)
+- [Real UID, Effective UID, Saved UID区别](http://blog.csdn.net/lzshlzsh/article/details/5927660)
 
