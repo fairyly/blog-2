@@ -1,6 +1,6 @@
 # Singleton Design Pattern
 
-```
+```java
 package link.styler.styler_android.data.source.remote.service;
 
 import java.util.ArrayList;

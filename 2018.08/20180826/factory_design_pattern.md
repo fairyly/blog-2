@@ -1,6 +1,6 @@
 # Factory Design Pattern
 
-```
+```java
 interface Shape {
    void draw();
 }
