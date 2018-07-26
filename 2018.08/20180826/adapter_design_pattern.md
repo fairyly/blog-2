@@ -1,4 +1,4 @@
-# Adaptor Design Pattern
+# Adapter Design Pattern
 
 ```java
 package link.styler.styler_android.data.source.remote.service;
@@ -17,7 +17,7 @@ interface Queue<T> {
   int length();
 }
 
-class AdaptorQueue extends ArrayList implements Queue<String>{
+class AdapterQueue extends ArrayList implements Queue<String>{
 
     private List<String> lists = new ArrayList();
 
@@ -45,7 +45,7 @@ class AdaptorQueue extends ArrayList implements Queue<String>{
 public class Main{
 
     public static void main(String []args){
-        Queue aq = new AdaptorQueue();
+        Queue aq = new AdapterQueue();
         aq.push("item_1");
         System.out.println(aq.length());
         aq.push("item_2");
