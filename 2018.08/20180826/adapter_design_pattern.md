@@ -17,7 +17,7 @@ interface Queue<T> {
   int length();
 }
 
-class AdapterQueue extends ArrayList implements Queue<String>{
+class AdapterQueue implements Queue<String>{
 
     private List<String> lists = new ArrayList();
 
